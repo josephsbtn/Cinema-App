@@ -1,0 +1,4 @@
+abc;Inside Out;155;100;100000.00
+abcd;cars;300;2;50000.00
+211;jujutsu kaisen;300;2;40000.00
+122;tokyo ghoul;300;3;54000.00
