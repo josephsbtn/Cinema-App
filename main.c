@@ -14,6 +14,12 @@ typedef struct film
     struct film *next;
 } film;
 
+void SetConsoleColor(WORD wAttributes)
+{
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, wAttributes);
+}
+
 void gotoxy(int x, int y)
 {
     COORD coord;
@@ -86,6 +92,7 @@ void display_data(film *head)
 
     if (current == NULL)
     {
+        gotoxy(62, 14);
         printf("DATA IS EMPTY!!\n");
         getch();
         return;
@@ -378,6 +385,7 @@ void menuSortData(film **head)
 
 int main()
 {
+    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN);
     film *head = NULL;
     char filename[] = "data.txt";
     head = load_data(filename);
@@ -396,7 +404,7 @@ int main()
     {
         system("cls");
         gotoxy(62, 10);
-        printf("=====ADMINISTRATOR XXI MOVIE=====\n");
+        printf("==========ADMINISTRATOR XXI MOVIE==========\n");
         gotoxy(75, 12);
         printf("LOGIN\n");
         gotoxy(62, 14);
@@ -463,16 +471,31 @@ int main()
                 posisi = 7;
             }
         }
+        int checkCode;
 
         switch (posisi)
         {
         case 1:
             system("cls");
-            gotoxy(62, 10);
-            printf("----- ADD MOVIE -----\n");
-            gotoxy(62, 12);
-            printf("Movie Code: ");
-            scanf("%s", kode_film);
+
+            do
+            {
+                system("cls");
+                gotoxy(62, 10);
+                printf("---------- ADD MOVIE ----------\n");
+                gotoxy(62, 12);
+                printf("Movie Code ( Max 5 elements): ");
+                scanf("%s", kode_film);
+                checkCode = strlen(kode_film);
+                if (checkCode > 5)
+                {
+                    gotoxy(62, 14);
+                    printf("---------- WRONG INPUT CODE!! ----------");
+                    getch();
+                }
+
+            } while (checkCode > 5);
+
             gotoxy(62, 14);
             printf("Movie Title: ");
             scanf(" %[^\n]s", nama_film);
@@ -491,22 +514,22 @@ int main()
         case 2:
             system("cls");
             gotoxy(62, 2);
-            printf("=====LIST MOVIE=====\n");
+            printf("========== LIST MOVIE ==========\n");
             gotoxy(62, 4);
             display_data(head);
             break;
         case 3:
             system("cls");
             gotoxy(62, 10);
-            printf("=====SEARCH DATA=====\n");
+            printf("========== SEARCH DATA ==========\n");
             gotoxy(62, 12);
             printf("Movie Code: ");
             scanf("%s", kode_film);
             film *found = search_data(head, kode_film);
             if (found != NULL)
             {
-                gotoxy(62, 14);
-                printf("===== DATA HAS FOUND =====\n");
+                gotoxy(60, 14);
+                printf("========== DATA HAS FOUND ==========\n");
                 gotoxy(62, 16);
                 printf("Movie Code: %s\n", found->kode_film);
                 gotoxy(62, 18);
@@ -520,8 +543,8 @@ int main()
             }
             else
             {
-                gotoxy(62, 14);
-                printf("===== DATA NOT FOUND =====\n");
+                gotoxy(60, 14);
+                printf("========== DATA NOT FOUND ==========\n");
             }
             getch();
             break;
@@ -529,7 +552,7 @@ int main()
 
             system("cls");
             gotoxy(62, 10);
-            printf("=====UPDATE DATA=====\n");
+            printf("========== UPDATE DATA ==========\n");
             gotoxy(62, 12);
             printf("Movie Code: ");
             scanf("%s", kode_film);
@@ -554,7 +577,7 @@ int main()
             else
             {
                 gotoxy(62, 14);
-                printf("===== DATA NOT FOUND =====\n");
+                printf("========== DATA NOT FOUND ==========\n");
                 getch();
             }
 
@@ -562,7 +585,7 @@ int main()
         case 5:
             system("cls");
             gotoxy(62, 10);
-            printf("===== DELETE MOVIE DATA =====\n");
+            printf("========== DELETE MOVIE DATA ==========\n");
             gotoxy(62, 12);
             printf("Code Movie: ");
             scanf("%s", kode_film);
@@ -578,7 +601,7 @@ int main()
             else
             {
                 gotoxy(62, 14);
-                printf("===== DATA NOT FOUND =====\n");
+                printf("========== DATA NOT FOUND ==========\n");
                 getch();
             }
 
