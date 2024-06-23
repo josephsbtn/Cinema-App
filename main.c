@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
-#include <time.h>
+#include <windows.h>
 
 typedef struct film
 {
@@ -14,98 +14,27 @@ typedef struct film
     struct film *next;
 } film;
 
-typedef struct user
+void gotoxy(int x, int y)
 {
-    char kode_user[5];
-    char username[50];
-    char password[50];
-    struct user *next;
-} user;
-
-typedef struct receipt
-{
-    char nama_film[50];
-    float harga_tiket;
-    float totalHarga;
-    char seatNumber[3];
-    int jumlahTicket;
-    struct receipt *next;
-} receipt;
-
-receipt *createReceipt(char namaFilm[], float hargaTicket, float totalHarga, char seatNumber[], int jumlahTicket)
-{
-    receipt *new = (receipt *)malloc(sizeof(receipt));
-    strcpy(new->nama_film, namaFilm);
-    new->harga_tiket = hargaTicket;
-    new->totalHarga = totalHarga;
-    strcpy(new->seatNumber, seatNumber);
-    new->jumlahTicket = jumlahTicket;
-    new->next = NULL;
-    return new;
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-film *create_link(char kode_film[], char nama_film[], int durasi_film, int studio_bioskop, float harga_tiket)
+int buttonHandler(int *posisi)
 {
-    film *new = (film *)malloc(sizeof(film));
-    strcpy(new->kode_film, kode_film);
-    strcpy(new->nama_film, nama_film);
-    new->durasi_film = durasi_film;
-    new->studio_bioskop = studio_bioskop;
-    new->harga_tiket = harga_tiket;
-    new->next = NULL;
-    return new;
-}
+    int button = getch();
 
-void generate_random_code(char *code, int length)
-{
-    static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    for (int i = 0; i < length; ++i)
+    if (button == 80)
     {
-        code[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+        (*posisi)++;
     }
-    code[length] = '\0';
-}
-
-user *create_user(char username[], char password[])
-{
-    user *new_user = (user *)malloc(sizeof(user));
-    generate_random_code(new_user->kode_user, 4); // Generate a random 4-character code.
-    strcpy(new_user->username, username);
-    strcpy(new_user->password, password);
-    new_user->next = NULL;
-    return new_user;
-}
-
-void add_user(user **head, char username[], char password[])
-{
-    user *new_user = create_user(username, password);
-    if (*head == NULL)
+    else if (button == 72)
     {
-        *head = new_user;
+        (*posisi)--;
     }
-    else
-    {
-        user *current = *head;
-        while (current->next != NULL)
-        {
-            current = current->next;
-        }
-        current->next = new_user;
-    }
-}
-
-user *find_user(user *head, char username[], char password[])
-{
-    user *current = head;
-    while (current != NULL)
-    {
-        if (strcmp(current->username, username) == 0 && strcmp(current->password, password) == 0)
-        {
-            return current;
-        }
-        current = current->next;
-    }
-    return NULL;
+    return button;
 }
 
 void arrow(int posisi, int nomor)
@@ -120,12 +49,24 @@ void arrow(int posisi, int nomor)
     }
 }
 
+film *create_link(char kode_film[], char nama_film[], int durasi_film, int studio_bioskop, float harga_tiket)
+{
+    film *new_film = (film *)malloc(sizeof(film));
+    strcpy(new_film->kode_film, kode_film);
+    strcpy(new_film->nama_film, nama_film);
+    new_film->durasi_film = durasi_film;
+    new_film->studio_bioskop = studio_bioskop;
+    new_film->harga_tiket = harga_tiket;
+    new_film->next = NULL;
+    return new_film;
+}
+
 void add_link(film **head, char kode_film[], char nama_film[], int durasi_film, int studio_bioskop, float harga_tiket)
 {
-    film *new = create_link(kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
+    film *new_film = create_link(kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
     if (*head == NULL)
     {
-        *head = new;
+        *head = new_film;
     }
     else
     {
@@ -134,41 +75,43 @@ void add_link(film **head, char kode_film[], char nama_film[], int durasi_film, 
         {
             current = current->next;
         }
-        current->next = new;
-    }
-}
-
-void addReceipt(receipt **head, char namaFilm[], float hargaTicket, float totalHarga, char seatNumber[], int jumlahTicket)
-{
-    receipt *new = createReceipt(namaFilm, hargaTicket, totalHarga, seatNumber, jumlahTicket);
-    if (*head == NULL)
-    {
-        *head = new;
-    }
-    else
-    {
-        receipt *current = *head;
-        while (current->next != NULL)
-        {
-            current = current->next;
-        }
-        current->next = new;
+        current->next = new_film;
     }
 }
 
 void display_data(film *head)
 {
+
     film *current = head;
+
+    if (current == NULL)
+    {
+        printf("DATA IS EMPTY!!\n");
+        getch();
+        return;
+    }
+    int y = 4; // Starting y coordinate
+
     while (current != NULL)
     {
-        printf("Kode film: %s\n", current->kode_film);
-        printf("Nama film: %s\n", current->nama_film);
-        printf("Durasi film: %d Minutes\n", current->durasi_film);
-        printf("Nomor Studio: %d\n", current->studio_bioskop);
-        printf("Harga Tiket: %.2f\n", current->harga_tiket);
-        printf("--------------------\n");
+        gotoxy(65, y);
+        printf("Kode film: %s", current->kode_film);
+        gotoxy(65, y + 1);
+        printf("Nama film: %s", current->nama_film);
+        gotoxy(65, y + 2);
+        printf("Durasi film: %d Minutes", current->durasi_film);
+        gotoxy(65, y + 3);
+        printf("Nomor Studio: %d", current->studio_bioskop);
+        gotoxy(65, y + 4);
+        printf("Harga Tiket: %.2f", current->harga_tiket);
+        gotoxy(65, y + 5);
+        printf("--------------------");
+
+        y += 7; // Move to the next set of lines for the next film
+
         current = current->next;
     }
+    getch();
 }
 
 film *search_data(film *head, char kode_film[])
@@ -177,20 +120,6 @@ film *search_data(film *head, char kode_film[])
     while (current != NULL)
     {
         if (strcmp(current->kode_film, kode_film) == 0)
-        {
-            return current;
-        }
-        current = current->next;
-    }
-    return NULL;
-}
-
-film *search_dataName(film *head, char nama_film[])
-{
-    film *current = head;
-    while (current != NULL)
-    {
-        if (strcmp(current->nama_film, nama_film) == 0)
         {
             return current;
         }
@@ -235,15 +164,9 @@ void delete_data(film **head, char kode_film[])
     }
 }
 
-void save_data(film *head, char dataFilm[])
+void save_data(film *head, char filename[])
 {
-    FILE *file = fopen(dataFilm, "w");
-    if (file == NULL)
-    {
-        printf("Error opening file for writing.\n");
-        return;
-    }
-
+    FILE *file = fopen(filename, "w");
     film *current = head;
     while (current != NULL)
     {
@@ -253,51 +176,13 @@ void save_data(film *head, char dataFilm[])
     fclose(file);
 }
 
-void save_users(char filename[], user *head)
+film *load_data(char filename[])
 {
-    FILE *file = fopen(filename, "w");
+    FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        printf("Error opening file for writing.\n");
-        return;
-    }
-
-    user *current = head;
-    while (current != NULL)
-    {
-        fprintf(file, "%s;%s;%s\n", current->kode_user, current->username, current->password);
-        current = current->next;
-    }
-    fclose(file);
-}
-
-void saveReceipt(char filename[], receipt *head)
-{
-    FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        printf("Error opening file for writing.\n");
-        return;
-    }
-
-    receipt *current = head;
-    while (current != NULL)
-    {
-        fprintf(file, "%s;%s;%s;\n", current->nama_film, current->harga_tiket, current->totalHarga, current->seatNumber, current->jumlahTicket);
-        current = current->next;
-    }
-    fclose(file);
-}
-
-film *load_data(char dataFilm[])
-{
-    FILE *file = fopen(dataFilm, "r");
-    if (file == NULL)
-    {
-        printf("File not found.\n");
         return NULL;
     }
-
     film *head = NULL;
     char kode_film[5];
     char nama_film[50];
@@ -312,48 +197,11 @@ film *load_data(char dataFilm[])
     return head;
 }
 
-user *load_users(char filename[])
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        printf("File not found.\n");
-        return;
-    }
-
-    char kode_user[5];
-    char username[50];
-    char password[50];
-    char line[100];
-
-    while (fgets(line, sizeof(line), file))
-    {
-    }
-
-    fclose(file);
-}
-
-int buttonHandler(int *posisi)
-{
-    int button = getch();
-
-    if (button == 80)
-    { // 80 = arrow down
-        (*posisi)++;
-    }
-    else if (button == 72)
-    { // 72 = arrow up
-        (*posisi)--;
-    }
-    return button;
-}
-
 void sortDatabyName(film **head)
 {
     if (*head == NULL)
     {
         printf("FILE IS EMPTY!!\n");
-        getch();
         return;
     }
     int swapped;
@@ -370,35 +218,30 @@ void sortDatabyName(film **head)
         {
             if (strcmp(ptr1->nama_film, ptr1->next->nama_film) > 0)
             {
-                // Swap the names
-                char tempName[50];
-                strcpy(tempName, ptr1->nama_film);
-                strcpy(ptr1->nama_film, ptr1->next->nama_film);
-                strcpy(ptr1->next->nama_film, tempName);
+                // Swap the data of the two nodes
+                char kode_film[5];
+                char nama_film[50];
+                int durasi_film;
+                int studio_bioskop;
+                float harga_tiket;
 
-                // Swap the price
-                float tempPrice;
-                tempPrice = ptr1->harga_tiket;
-                ptr1->harga_tiket = ptr1->next->harga_tiket;
-                ptr1->next->harga_tiket = tempPrice;
+                strcpy(kode_film, ptr1->kode_film);
+                strcpy(nama_film, ptr1->nama_film);
+                durasi_film = ptr1->durasi_film;
+                studio_bioskop = ptr1->studio_bioskop;
+                harga_tiket = ptr1->harga_tiket;
 
-                // Swap film code
-                char tempCode[5];
-                strcpy(tempCode, ptr1->kode_film);
                 strcpy(ptr1->kode_film, ptr1->next->kode_film);
-                strcpy(ptr1->next->kode_film, tempCode);
-
-                // Swap film duration
-                int tempDuration;
-                tempDuration = ptr1->durasi_film;
+                strcpy(ptr1->nama_film, ptr1->next->nama_film);
                 ptr1->durasi_film = ptr1->next->durasi_film;
-                ptr1->next->durasi_film = tempDuration;
-
-                // Swap studio
-                int tempStudio;
-                tempStudio = ptr1->studio_bioskop;
                 ptr1->studio_bioskop = ptr1->next->studio_bioskop;
-                ptr1->next->studio_bioskop = tempStudio;
+                ptr1->harga_tiket = ptr1->next->harga_tiket;
+
+                strcpy(ptr1->next->kode_film, kode_film);
+                strcpy(ptr1->next->nama_film, nama_film);
+                ptr1->next->durasi_film = durasi_film;
+                ptr1->next->studio_bioskop = studio_bioskop;
+                ptr1->next->harga_tiket = harga_tiket;
 
                 swapped = 1;
             }
@@ -406,81 +249,6 @@ void sortDatabyName(film **head)
         }
         lptr = ptr1;
     } while (swapped);
-    system("cls");
-    printf("SORTED DATA\n");
-    display_data(*head);
-    getch();
-}
-
-void inputData(film **head)
-{
-    char kode_film[5], nama_film[50];
-    int durasi_film;
-    int studio_bioskop;
-    float harga_tiket;
-    printf("Tambah data film\n");
-    printf("Kode film: ");
-    scanf("%s", kode_film);
-    printf("Nama film: ");
-    scanf(" %[^\n]s", nama_film);
-    printf("Durasi film: ");
-    scanf("%d", &durasi_film);
-    printf("Nomor Studio: ");
-    scanf("%d", &studio_bioskop);
-    printf("Harga Tiket: ");
-    scanf("%f", &harga_tiket);
-    add_link(head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
-}
-
-void findData(film *head)
-{
-    char kode_film[5];
-    printf("Cari data film\n");
-    printf("Kode film: ");
-    scanf("%s", kode_film);
-    film *found = search_data(head, kode_film);
-    if (found != NULL)
-    {
-        printf("Data ditemukan\n");
-        printf("Kode film: %s\n", found->kode_film);
-        printf("Nama film: %s\n", found->nama_film);
-        printf("Durasi film: %d Minutes\n", found->durasi_film);
-        printf("Nomor Studio: %d\n", found->studio_bioskop);
-        printf("Harga Tiket: %.2f\n", found->harga_tiket);
-    }
-    else
-    {
-        printf("Data tidak ditemukan\n");
-    }
-}
-
-void updateFilmData(film *head)
-{
-    char kode_film[5], nama_film[50];
-    int durasi_film;
-    int studio_bioskop;
-    float harga_tiket;
-    printf("Update data film\n");
-    printf("Kode film: ");
-    scanf("%s", kode_film);
-    printf("Nama film: ");
-    scanf(" %[^\n]s", nama_film);
-    printf("Durasi film: ");
-    scanf("%d", &durasi_film);
-    printf("Nomor Studio: ");
-    scanf("%d", &studio_bioskop);
-    printf("Harga Tiket: ");
-    scanf("%f", &harga_tiket);
-    update_data(head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
-}
-
-void deleteFilmData(film **head)
-{
-    char kode_film[5];
-    printf("Hapus data film\n");
-    printf("Kode film: ");
-    scanf("%s", kode_film);
-    delete_data(head, kode_film);
 }
 
 void sortDatabyDuration(film **head)
@@ -488,7 +256,6 @@ void sortDatabyDuration(film **head)
     if (*head == NULL)
     {
         printf("FILE IS EMPTY!!\n");
-        getch();
         return;
     }
 
@@ -539,6 +306,15 @@ void sortDatabyDuration(film **head)
     } while (swapped);
 }
 
+int login(char username[], char password[])
+{
+    if (strcmp(username, "admin") == 0 && strcmp(password, "password") == 0)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void menuSortData(film **head)
 {
     int posisi = 1;
@@ -549,16 +325,22 @@ void menuSortData(film **head)
         while (button != 13)
         {
             system("cls");
-            printf("posisi %d", posisi);
-            printf("tombol = %d \n", button);
+            gotoxy(2, 10);
             printf("Sort by :\n");
+            gotoxy(2, 12);
             arrow(posisi, 1);
+            gotoxy(3, 12);
             printf("1. Sort list based on name\n");
-            arrow(posisi, 2);
-            printf("2. Sort list based on duration\n");
-            arrow(posisi, 3);
-            printf("3. Log Out\n");
 
+            gotoxy(2, 14);
+            arrow(posisi, 2);
+            gotoxy(3, 14);
+            printf("2. Sort list based on duration\n");
+
+            gotoxy(2, 16);
+            arrow(posisi, 3);
+            gotoxy(3, 16);
+            printf("3. Exit\n");
             button = buttonHandler(&posisi);
             if (posisi > 3)
             {
@@ -574,293 +356,229 @@ void menuSortData(film **head)
         {
         case 1:
             sortDatabyName(head);
+            gotoxy(62, 2);
+            printf("Sorted by name.\n");
+            gotoxy(62, 4);
+            display_data(*head);
             break;
         case 2:
             sortDatabyDuration(head);
+            gotoxy(62, 2);
+            printf("Sorted by duration.\n");
+            gotoxy(62, 4);
+            display_data(*head);
             break;
+        case 3:
+            return;
         default:
-            break;
+            printf("Invalid choice.\n");
         }
     } while (posisi != 3);
-}
-
-void buyTicket(film *filmList, receipt *receiptHead)
-{
-    char kode_film[5];
-    int jumlahTicket;
-    char seatNumber[3];
-
-    display_data(filmList);
-    printf("Enter the film code you want to buy: ");
-    scanf("%s", kode_film);
-
-    film *selectedFilm = search_data(filmList, kode_film);
-    if (selectedFilm != NULL)
-    {
-        printf("Enter the number of tickets: ");
-        scanf("%d", &jumlahTicket);
-        printf("Enter the seat number: ");
-        scanf("%s", seatNumber);
-
-        float totalPrice = jumlahTicket * selectedFilm->harga_tiket;
-        printf("Total price: %.2f\n", totalPrice);
-        printf("Purchase successful!\n");
-
-        // Create and add the receipt
-        addReceipt(&receiptHead, selectedFilm->nama_film, selectedFilm->harga_tiket, totalPrice, seatNumber, jumlahTicket);
-    }
-    else
-    {
-        printf("Film not found!\n");
-    }
-}
-
-void menuUser(user **userHead, film **head, receipt **receiptHead)
-{
-    int posisi = 1;
-    int button;
-    do
-    {
-        button = 0;
-        while (button != 13)
-        {
-            system("cls");
-            printf("posisi %d", posisi);
-            printf("tombol = %d \n", button);
-            printf("CINEMA XII\n");
-            arrow(posisi, 1);
-            printf("1. List Movie\n");
-            arrow(posisi, 2);
-            printf("2. Buy Ticket\n");
-            arrow(posisi, 3);
-            printf("3. Receipt Ticket\n");
-            arrow(posisi, 4);
-            printf("4. Log Out\n");
-
-            button = buttonHandler(&posisi);
-            if (posisi > 3)
-            {
-                posisi = 1;
-            }
-            else if (posisi < 1)
-            {
-                posisi = 3;
-            }
-        }
-        switch (posisi)
-        {
-        case 1:
-            system("cls");
-            display_data(*head);
-            getch();
-            break;
-        case 2:
-            system("cls");
-            buyTicket(*head, *receiptHead);
-            getch();
-        case 3:
-            system("cls");
-            receiptTicket();
-            getch();
-        default:
-            break;
-        }
-    } while (posisi != 4);
-}
-
-void menuAdmin(film **head)
-{
-    int posisi = 1;
-    int button;
-    do
-    {
-        button = 0;
-        while (button != 13)
-        {
-            system("cls");
-            printf("posisi %d", posisi);
-            printf("tombol = %d \n", button);
-            printf("CINEMA MANAGEMENT APP\n");
-            arrow(posisi, 1);
-            printf("1. Add New Movie\n");
-            arrow(posisi, 2);
-            printf("2. Show All Movies\n");
-            arrow(posisi, 3);
-            printf("3. Find Movie\n");
-            arrow(posisi, 4);
-            printf("4. Update Movie Data\n");
-            arrow(posisi, 5);
-            printf("5. Delete Movie Data\n");
-            arrow(posisi, 6);
-            printf("6. Save All Data to File\n");
-            arrow(posisi, 7);
-            printf("7. Sort Data \n");
-            arrow(posisi, 8);
-            printf("8. Log Out\n");
-
-            button = buttonHandler(&posisi);
-            if (posisi > 8)
-            {
-                posisi = 1;
-            }
-            else if (posisi < 1)
-            {
-                posisi = 8;
-            }
-        }
-
-        switch (posisi)
-        {
-        case 1:
-            system("cls");
-            inputData(head);
-            break;
-        case 2:
-            system("cls");
-            display_data(*head);
-            getch();
-            break;
-        case 3:
-            system("cls");
-            findData(*head);
-            getch();
-            break;
-        case 4:
-            system("cls");
-            updateFilmData(*head);
-            break;
-        case 5:
-            system("cls");
-            deleteFilmData(head);
-            break;
-        case 6:
-            system("cls");
-            save_data(*head, "data.txt");
-            printf("Data saved to file.\n");
-            getch();
-            break;
-        case 7:
-            system("cls");
-            menuSortData(head);
-            break;
-        }
-    } while (posisi != 8);
-}
-
-void login(user **headUser, film **headFilm, receipt **headReceipt)
-{
-    char username[50];
-    char password[50];
-
-    printf("Enter username: ");
-    scanf("%s", username);
-    printf("Enter password: ");
-    scanf("%s", password);
-
-    user *found_user = find_user(*headUser, username, password);
-    if (found_user != NULL)
-    {
-        system("cls");
-        printf("Login successful!\n");
-        getch();
-        menuUser(*headUser, *headFilm, *headReceipt);
-    }
-    else if (strcmp(username, "admin") == 0 && strcmp(password, "password") == 0)
-    {
-        system("cls");
-        printf("WELCOME ADMIN!\n");
-        menuAdmin(*headFilm);
-    }
-
-    else
-    {
-        printf("Login failed! Incorrect username or password.\n");
-        getch();
-    }
-}
-
-void regUser(user **head)
-{
-    char username[50];
-    char password[50];
-    char passwordUlan[10];
-    system("cls");
-    printf("REGISTRATION ACCOUNT\n");
-    printf("Enter username: ");
-    scanf("%s", username);
-    do
-    {
-        printf("Enter password: ");
-        scanf("%s", password);
-        printf("Reapeat Password:");
-        scanf("%s", passwordUlan);
-    } while (strcmp(password, passwordUlan) != 0);
-
-    add_user(head, username, password);
-    printf("Registration successful!\n");
-    getch();
 }
 
 int main()
 {
-    srand(time(0));
     film *head = NULL;
-    user *head_user = NULL;
-    receipt *head_receipt = NULL;
-
-    char dataFilm[] = "dataFilm.txt";
-    char userFile[] = "user.txt";
-    char receiptFile[] = "receipt.txt";
-
-    head_user = load_users(userFile);
-    head = load_data(dataFilm);
-
-    int posisi = 1;
+    char filename[] = "data.txt";
+    head = load_data(filename);
     int button;
+    int posisi = 1;
+    int choice;
+    char kode_film[5];
+    char nama_film[50];
+    int durasi_film;
+    int studio_bioskop;
+    float harga_tiket;
+    char username[50];
+    char password[50];
+    int checkLogin;
+    do
+    {
+        system("cls");
+        gotoxy(62, 10);
+        printf("=====ADMINISTRATOR XXI MOVIE=====\n");
+        gotoxy(75, 12);
+        printf("LOGIN\n");
+        gotoxy(62, 14);
+        printf("Username: ");
+        scanf("%s", username);
+        gotoxy(62, 16);
+        printf("Password: ");
+        scanf("%s", password);
+        checkLogin = login(username, password);
+        if (checkLogin == 0)
+        {
+            gotoxy(68, 18);
+            printf("WRONG USERNAME OR PASSWORD\n");
+            gotoxy(75, 20);
+            printf("TRY AGAIN");
+            getch();
+        }
+    } while (checkLogin == 0);
+
     do
     {
         button = 0;
         while (button != 13)
         {
             system("cls");
-            printf("posisi %d", posisi);
-            printf("tombol = %d \n", button);
-            printf("WELCOME TO XXI APPS:\n");
+            gotoxy(62, 10);
+            printf("=====  CINEMA MANAGEMENT APP  =====\n\n");
+            gotoxy(62, 11);
             arrow(posisi, 1);
-            printf("1. LOGIN\n");
+            gotoxy(65, 11);
+            printf("1. Add New Movie\n\n");
+            gotoxy(62, 13);
             arrow(posisi, 2);
-            printf("2. REGISTER ACCOUNT\n");
+            gotoxy(65, 13);
+            printf("2. Show All Movies\n\n");
+            gotoxy(62, 15);
             arrow(posisi, 3);
-            printf("3. EXIT\n");
+            gotoxy(65, 15);
+            printf("3. Find Movie\n\n");
+            gotoxy(62, 17);
+            arrow(posisi, 4);
+            gotoxy(65, 17);
+            printf("4. Update Movie Data\n\n");
+            gotoxy(62, 19);
+            arrow(posisi, 5);
+            gotoxy(65, 19);
+            printf("5. Delete Movie Data\n\n");
+            gotoxy(62, 21);
+            arrow(posisi, 6);
+            gotoxy(65, 21);
+            printf("6. Sort Data \n\n");
+            gotoxy(62, 23);
+            arrow(posisi, 7);
+            gotoxy(65, 23);
+            printf("7. Log Out\n\n");
 
             button = buttonHandler(&posisi);
-            if (posisi > 3)
+            if (posisi > 7)
             {
                 posisi = 1;
             }
             else if (posisi < 1)
             {
-                posisi = 3;
+                posisi = 7;
             }
         }
 
         switch (posisi)
         {
         case 1:
-            login(&head_user, &head, &head_receipt);
+            system("cls");
+            printf("Tambah data film\n");
+            printf("Movie Code: ");
+            scanf("%s", kode_film);
+            printf("Movie Title: ");
+            scanf(" %[^\n]s", nama_film);
+            printf("Movie Duration: ");
+            scanf("%d", &durasi_film);
+            printf("Studio: ");
+            scanf("%d", &studio_bioskop);
+            printf("Ticket Price: ");
+            scanf("%f", &harga_tiket);
+            add_link(&head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
+            save_data(head, filename);
             break;
         case 2:
-            regUser(&head_user);
-            save_users(userFile, head_user);
-            saveReceipt(receiptFile, head_receipt);
+            system("cls");
+            gotoxy(62, 2);
+            printf("=====LIST MOVIE=====\n");
+            gotoxy(62, 4);
+            display_data(head);
             break;
         case 3:
-            save_data(head, dataFilm);
+            system("cls");
+            printf("=====SEARCH DATA=====\n");
+            printf("Movie Code: ");
+            scanf("%s", kode_film);
+            film *found = search_data(head, kode_film);
+            if (found != NULL)
+            {
+                printf("===== DATA HAS FOUND =====\n");
+                printf("Movie Code: %s\n", found->kode_film);
+                printf("Movie Title %s\n", found->nama_film);
+                printf("Movie Duration: %d Minutes\n", found->durasi_film);
+                printf("Studio: %d\n", found->studio_bioskop);
+                printf("Ticket Price: %.2f\n", found->harga_tiket);
+            }
+            else
+            {
+                printf("===== DATA NOT FOUND =====\n");
+            }
+            getch();
             break;
+        case 4:
+
+            system("cls");
+            gotoxy(62, 10);
+            printf("=====UPDATE DATA=====\n");
+            gotoxy(62, 12);
+            printf("Movie Code: ");
+            scanf("%s", kode_film);
+            film *update = search_data(head, kode_film);
+            if (update != NULL)
+            {
+                gotoxy(62, 14);
+                printf("Movie Title: ");
+                scanf(" %[^\n]s", nama_film);
+                gotoxy(62, 16);
+                printf("Movie Duration: ");
+                scanf("%d", &durasi_film);
+                gotoxy(62, 18);
+                printf("Studio: ");
+                scanf("%d", &studio_bioskop);
+                gotoxy(62, 20);
+                printf("Ticket Price : ");
+                scanf("%f", &harga_tiket);
+                update_data(head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
+                save_data(head, filename);
+            }
+            else
+            {
+                printf("===== DATA NOT FOUND =====\n");
+                getch();
+            }
+
+            break;
+        case 5:
+            system("cls");
+            gotoxy(62, 10);
+            printf("===== DELETE MOVIE DATA =====\n");
+            gotoxy(62, 12);
+            printf("Code Movie: ");
+            scanf("%s", kode_film);
+            film *delete = search_data(head, kode_film);
+            if (delete != NULL)
+            {
+                delete_data(&head, kode_film);
+                save_data(head, filename);
+                gotoxy(62, 14);
+                printf("DATA HAS DELETED!\n");
+                getch();
+            }
+            else
+            {
+                gotoxy(62, 14);
+                printf("===== DATA NOT FOUND =====\n");
+                getch();
+            }
+
+            break;
+        case 6:
+            system("cls");
+            menuSortData(&head);
+            break;
+        case 7:
+            system("cls");
+            printf("Keluar\n");
+            return 0;
         default:
-            break;
+            printf("Pilihan tidak valid\n");
         }
-    } while (posisi != 3);
+    } while (posisi != 8);
 
     return 0;
 }
