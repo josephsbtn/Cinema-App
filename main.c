@@ -14,12 +14,6 @@ typedef struct film
     struct film *next;
 } film;
 
-void SetConsoleColor(WORD wAttributes)
-{
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsole, wAttributes);
-}
-
 void gotoxy(int x, int y)
 {
     COORD coord;
@@ -55,21 +49,22 @@ void arrow(int posisi, int nomor)
     }
 }
 
-film *create_link(char kode_film[], char nama_film[], int durasi_film, int studio_bioskop, float harga_tiket)
+void add_link(film **head, char kode_film[], char nama_film[], int durasi_film, int studio_bioskop, float harga_tiket)
 {
     film *new_film = (film *)malloc(sizeof(film));
+    if (new_film == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        return;
+    }
+
     strcpy(new_film->kode_film, kode_film);
     strcpy(new_film->nama_film, nama_film);
     new_film->durasi_film = durasi_film;
     new_film->studio_bioskop = studio_bioskop;
     new_film->harga_tiket = harga_tiket;
     new_film->next = NULL;
-    return new_film;
-}
 
-void add_link(film **head, char kode_film[], char nama_film[], int durasi_film, int studio_bioskop, float harga_tiket)
-{
-    film *new_film = create_link(kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
     if (*head == NULL)
     {
         *head = new_film;
@@ -85,20 +80,42 @@ void add_link(film **head, char kode_film[], char nama_film[], int durasi_film, 
     }
 }
 
+film *load_data(char filename[])
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        printf("Failed to open file %s.\n", filename);
+        return NULL;
+    }
+
+    film *head = NULL;
+    char kode_film[6];
+    char nama_film[51];
+    int durasi_film;
+    int studio_bioskop;
+    float harga_tiket;
+
+    while (fscanf(file, "%5[^;];%50[^;];%d;%d;%f\n", kode_film, nama_film, &durasi_film, &studio_bioskop, &harga_tiket) == 5)
+    {
+        add_link(&head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
+    }
+
+    fclose(file);
+    return head;
+}
+
+// Function to display films from linked list
 void display_data(film *head)
 {
-
     film *current = head;
 
     if (current == NULL)
     {
-        gotoxy(62, 14);
         printf("DATA IS EMPTY!!\n");
-        getch();
         return;
     }
-    int y = 4; // Starting y coordinate
-
+    int y = 4;
     while (current != NULL)
     {
         gotoxy(65, y);
@@ -119,6 +136,17 @@ void display_data(film *head)
         current = current->next;
     }
     getch();
+}
+
+void free_list(film *head)
+{
+    film *current = head;
+    while (current != NULL)
+    {
+        film *temp = current;
+        current = current->next;
+        free(temp);
+    }
 }
 
 film *search_data(film *head, char kode_film[])
@@ -181,27 +209,6 @@ void save_data(film *head, char filename[])
         current = current->next;
     }
     fclose(file);
-}
-
-film *load_data(char filename[])
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        return NULL;
-    }
-    film *head = NULL;
-    char kode_film[5];
-    char nama_film[50];
-    int durasi_film;
-    int studio_bioskop;
-    float harga_tiket;
-    while (fscanf(file, "%[^;];%[^;];%d;%d;%f\n", kode_film, nama_film, &durasi_film, &studio_bioskop, &harga_tiket) == 5)
-    {
-        add_link(&head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
-    }
-    fclose(file);
-    return head;
 }
 
 void sortDatabyName(film **head)
@@ -385,10 +392,6 @@ void menuSortData(film **head)
 
 int main()
 {
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN);
-    film *head = NULL;
-    char filename[] = "data.txt";
-    head = load_data(filename);
     int button;
     int posisi = 1;
     int choice;
@@ -400,11 +403,15 @@ int main()
     char username[50];
     char password[50];
     int checkLogin;
+    film *head = NULL;
+    char filename[] = "data.txt";
+    head = load_data(filename);
+
     do
     {
         system("cls");
         gotoxy(62, 10);
-        printf("==========ADMINISTRATOR XXI MOVIE==========\n");
+        printf("=====ADMINISTRATOR XXI MOVIE=====\n");
         gotoxy(75, 12);
         printf("LOGIN\n");
         gotoxy(62, 14);
@@ -482,15 +489,15 @@ int main()
             {
                 system("cls");
                 gotoxy(62, 10);
-                printf("---------- ADD MOVIE ----------\n");
+                printf("----- ADD MOVIE -----\n");
                 gotoxy(62, 12);
-                printf("Movie Code ( Max 5 elements): ");
+                printf("Movie Code (max 5 elements): ");
                 scanf("%s", kode_film);
                 checkCode = strlen(kode_film);
                 if (checkCode > 5)
                 {
                     gotoxy(62, 14);
-                    printf("---------- WRONG INPUT CODE!! ----------");
+                    printf("-----WRONG INPUT CODE!!-----");
                     getch();
                 }
 
@@ -514,22 +521,22 @@ int main()
         case 2:
             system("cls");
             gotoxy(62, 2);
-            printf("========== LIST MOVIE ==========\n");
+            printf("=====LIST MOVIE=====\n");
             gotoxy(62, 4);
             display_data(head);
             break;
         case 3:
             system("cls");
             gotoxy(62, 10);
-            printf("========== SEARCH DATA ==========\n");
+            printf("=====SEARCH DATA=====\n");
             gotoxy(62, 12);
             printf("Movie Code: ");
             scanf("%s", kode_film);
             film *found = search_data(head, kode_film);
             if (found != NULL)
             {
-                gotoxy(60, 14);
-                printf("========== DATA HAS FOUND ==========\n");
+                gotoxy(62, 14);
+                printf("===== DATA HAS FOUND =====\n");
                 gotoxy(62, 16);
                 printf("Movie Code: %s\n", found->kode_film);
                 gotoxy(62, 18);
@@ -543,8 +550,8 @@ int main()
             }
             else
             {
-                gotoxy(60, 14);
-                printf("========== DATA NOT FOUND ==========\n");
+                gotoxy(62, 14);
+                printf("===== DATA NOT FOUND =====\n");
             }
             getch();
             break;
@@ -552,7 +559,7 @@ int main()
 
             system("cls");
             gotoxy(62, 10);
-            printf("========== UPDATE DATA ==========\n");
+            printf("=====UPDATE DATA=====\n");
             gotoxy(62, 12);
             printf("Movie Code: ");
             scanf("%s", kode_film);
@@ -577,7 +584,7 @@ int main()
             else
             {
                 gotoxy(62, 14);
-                printf("========== DATA NOT FOUND ==========\n");
+                printf("===== DATA NOT FOUND =====\n");
                 getch();
             }
 
@@ -585,7 +592,7 @@ int main()
         case 5:
             system("cls");
             gotoxy(62, 10);
-            printf("========== DELETE MOVIE DATA ==========\n");
+            printf("===== DELETE MOVIE DATA =====\n");
             gotoxy(62, 12);
             printf("Code Movie: ");
             scanf("%s", kode_film);
@@ -601,7 +608,7 @@ int main()
             else
             {
                 gotoxy(62, 14);
-                printf("========== DATA NOT FOUND ==========\n");
+                printf("===== DATA NOT FOUND =====\n");
                 getch();
             }
 
@@ -612,7 +619,9 @@ int main()
             break;
         case 7:
             system("cls");
-            printf("Keluar\n");
+            gotoxy(62, 14);
+            printf("===== ADIOSS =====\n");
+            free_list(head);
             return 0;
         default:
             printf("Pilihan tidak valid\n");
