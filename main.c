@@ -468,15 +468,21 @@ int main()
         {
         case 1:
             system("cls");
-            printf("Tambah data film\n");
+            gotoxy(62, 10);
+            printf("----- ADD MOVIE -----\n");
+            gotoxy(62, 12);
             printf("Movie Code: ");
             scanf("%s", kode_film);
+            gotoxy(62, 14);
             printf("Movie Title: ");
             scanf(" %[^\n]s", nama_film);
+            gotoxy(62, 16);
             printf("Movie Duration: ");
             scanf("%d", &durasi_film);
+            gotoxy(62, 18);
             printf("Studio: ");
             scanf("%d", &studio_bioskop);
+            gotoxy(62, 20);
             printf("Ticket Price: ");
             scanf("%f", &harga_tiket);
             add_link(&head, kode_film, nama_film, durasi_film, studio_bioskop, harga_tiket);
@@ -491,21 +497,30 @@ int main()
             break;
         case 3:
             system("cls");
+            gotoxy(62, 10);
             printf("=====SEARCH DATA=====\n");
+            gotoxy(62, 12);
             printf("Movie Code: ");
             scanf("%s", kode_film);
             film *found = search_data(head, kode_film);
             if (found != NULL)
             {
+                gotoxy(62, 14);
                 printf("===== DATA HAS FOUND =====\n");
+                gotoxy(62, 16);
                 printf("Movie Code: %s\n", found->kode_film);
+                gotoxy(62, 18);
                 printf("Movie Title %s\n", found->nama_film);
+                gotoxy(62, 20);
                 printf("Movie Duration: %d Minutes\n", found->durasi_film);
+                gotoxy(62, 22);
                 printf("Studio: %d\n", found->studio_bioskop);
+                gotoxy(62, 24);
                 printf("Ticket Price: %.2f\n", found->harga_tiket);
             }
             else
             {
+                gotoxy(62, 14);
                 printf("===== DATA NOT FOUND =====\n");
             }
             getch();
@@ -538,6 +553,7 @@ int main()
             }
             else
             {
+                gotoxy(62, 14);
                 printf("===== DATA NOT FOUND =====\n");
                 getch();
             }
